@@ -1,0 +1,27 @@
+name: Run Aqua
+inputs:
+  julia_version:
+    description:
+      Julia version to be used for running Aqua.jl.
+    required: false
+    default: '1'
+runs:
+  using: "composite"
+  steps:
+      - name: Install dependencies
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path = "."))
+          Pkg.add([
+              PackageSpec(name = "TOML", version = "1"),
+              PackageSpec(name = "Aqua", version = "0.5"),
+          ])
+        shell: julia --color=yes {0}
+      - name: Run Aqua
+        run: |
+          using Aqua
+          using TOML
+          name = Symbol(TOML.parsefile("Project.toml")["name"])
+          @eval using $name
+          Aqua.test_all(@eval $name)
+        shell: julia --color=yes {0}
